@@ -123,6 +123,8 @@ void setLoggingColorEnabledWithString(const CharString colorSchemeName);
  */
 void setLoggingZebraSize(const unsigned long zebraStripeSize);
 
+void logOscMessage(const char* address, const char* path, const char type, const CharString data);
+
 /**
  * Log a debug message.
  * @param message Format string, like printf

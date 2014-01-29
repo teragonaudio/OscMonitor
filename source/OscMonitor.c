@@ -59,22 +59,54 @@ static CharString formatData(const char type, lo_arg *data) {
 static int messageHandler(const char *path, const char *types, lo_arg **argv, int argc, void *data, void *user_data) {
   CharString formattedData;
   lo_address source = lo_message_get_source(data);
-  int i;
+  int i = 0;
 
-  for(i = 0; i < argc; ++i) {
+  if(argc == 1) {
     formattedData = formatData(types[i], argv[i]);
-    logInfo("%s '%s' %c %s", lo_address_get_url(source), path, types[i], formattedData->data);
+    logOscMessage(lo_address_get_hostname(source), path, types[i], formattedData);
     freeCharString(formattedData);
+  }
+  else {
+    logDebug("Received OSC bundle with %d parts", argc);
+    for(i = 0; i < argc; ++i) {
+      formattedData = formatData(types[i], argv[i]);
+      logOscMessage(lo_address_get_hostname(source), path, types[i], formattedData);
+      freeCharString(formattedData);
+    }
+    logDebug("End of OSC bundle");
   }
   return 0;
 }
 
 int main(int argc, char* argv[]) {
+  ProgramOptions options;
   lo_server_thread serverThread = NULL;
+  CharString port = newCharStringWithCapacity(kCharStringLengthShort);
+  int protocol = LO_UDP;
 
+  options = getProgramOptions();
+  programOptionsParseArgs(options, argc, argv);
   initEventLogger();
 
-  serverThread = lo_server_thread_new_with_proto("7000", LO_UDP, errorHandler);
+  if(options->options[kOptionHelp]->enabled) {
+    printf("OscMonitor options:\n");
+    programOptionsPrintHelp(options, true, 2);
+    return RETURN_CODE_NOT_RUN;
+  }
+  else if(options->options[kOptionVersion]->enabled) {
+    printf("OscMonitor version 1.0.0\n");
+    return RETURN_CODE_NOT_RUN;
+  }
+
+  if(options->options[kOptionVerbose]->enabled) {
+    setLogLevel(LOG_DEBUG);
+  }
+  if(options->options[kOptionTcp]->enabled) {
+    protocol = LO_TCP;
+  }
+
+  snprintf(port->data, port->capacity, "%d", (int)programOptionsGetNumber(options, kOptionPort));
+  serverThread = lo_server_thread_new_with_proto(port->data, protocol, errorHandler);
   if(serverThread == NULL) {
     logError("Could not create OSC server therad");
     return RETURN_CODE_NOT_RUN;
@@ -108,7 +140,10 @@ int main(int argc, char* argv[]) {
     sleepMilliseconds(SLEEP_TIME_MS);
   }
 
+  logDebug("Shutting down server thread");
   lo_server_thread_stop(serverThread);
   lo_server_thread_free(serverThread);
+  freeProgramOptions(options);
+  freeCharString(port);
   return RETURN_CODE_SUCCESS;
 }

@@ -197,12 +197,12 @@ static void _printMessage(const LogLevel logLevel, const long elapsedTimeInMs, c
   if(eventLogger->useColor) {
     snprintf(logString, kCharStringLengthLong, "%c ", _logLevelStatusChar(logLevel));
     printToLog(_logLevelStatusColor(logLevel), eventLogger->logFile, logString);
-    snprintf(logString, kCharStringLengthLong, "%06ld ", elapsedTimeInMs);
+    snprintf(logString, kCharStringLengthLong, "%08ld ", elapsedTimeInMs);
     printToLog(_logTimeColor(), eventLogger->logFile, logString);
     printToLog(_logLevelStatusColor(logLevel), eventLogger->logFile, message);
   }
   else {
-    snprintf(logString, kCharStringLengthLong, "%c %06ld %s", _logLevelStatusChar(logLevel), elapsedTimeInMs, message);
+    snprintf(logString, kCharStringLengthLong, "%c %08ld %s", _logLevelStatusChar(logLevel), elapsedTimeInMs, message);
     printToLog(COLOR_NONE, eventLogger->logFile, logString);
   }
   flushLog(eventLogger->logFile);
@@ -231,6 +231,50 @@ static void _logMessage(const LogLevel logLevel, const char* message, va_list ar
 #endif
     _printMessage(logLevel, elapsedTimeInMs, formattedMessage->data, eventLogger);
     freeCharString(formattedMessage);
+  }
+}
+
+void logOscMessage(const char* address, const char* path, const char type, const CharString data) {
+  long elapsedTimeInMs;
+  EventLogger eventLogger = _getEventLoggerInstance();
+#if WINDOWS
+  ULONGLONG currentTime;
+#else
+  struct timeval currentTime;
+#endif
+
+  if(eventLogger != NULL) {
+#if WINDOWS
+    currentTime = GetTickCount();
+    elapsedTimeInMs = (unsigned long)(currentTime - eventLogger->startTimeInMs);
+#else
+    gettimeofday(&currentTime, NULL);
+    elapsedTimeInMs = ((currentTime.tv_sec - (eventLogger->startTimeInSec + 1)) * 1000) +
+      (currentTime.tv_usec / 1000) + (1000 - eventLogger->startTimeInMs);
+#endif
+
+    char* logString = (char*)malloc(sizeof(char) * kCharStringLengthLong);
+    if(eventLogger->useColor) {
+      snprintf(logString, kCharStringLengthLong, "%c ", _logLevelStatusChar(LOG_INFO));
+      printToLog(_logLevelStatusColor(LOG_INFO), eventLogger->logFile, logString);
+      snprintf(logString, kCharStringLengthLong, "%08ld ", elapsedTimeInMs);
+      printToLog(_logTimeColor(), eventLogger->logFile, logString);
+      snprintf(logString, kCharStringLengthLong, "%s ", address);
+      printToLog(COLOR_FG_GREEN, eventLogger->logFile, logString);
+      snprintf(logString, kCharStringLengthLong, "%s ", path);
+      printToLog(COLOR_FG_FUCHSIA, eventLogger->logFile, logString);
+      snprintf(logString, kCharStringLengthLong, "%c ", type);
+      printToLog(COLOR_FG_RED, eventLogger->logFile, logString);
+      printToLog(_logLevelStatusColor(LOG_INFO), eventLogger->logFile, data->data);
+    }
+    else {
+      snprintf(logString, kCharStringLengthLong, "%c %08ld %s %s %c %s",
+               _logLevelStatusChar(LOG_INFO), elapsedTimeInMs,
+               address, path, type, data->data);
+      printToLog(COLOR_NONE, eventLogger->logFile, logString);
+    }
+    flushLog(eventLogger->logFile);
+    free(logString);
   }
 }
 
