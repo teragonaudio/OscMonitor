@@ -1,7 +1,10 @@
+#include "Options.h"
+
 // LibLo header
 #include "lo/lo.h"
 
 // MrsWatson SDK
+#include "app/ProgramOption.h"
 #include "app/ReturnCodes.h"
 #include "base/PlatformUtilities.h"
 #include "logging/EventLogger.h"
