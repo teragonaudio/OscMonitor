@@ -30,7 +30,6 @@
 #include <stdarg.h>
 
 #include "app/BuildInfo.h"
-#include "audio/AudioSettings.h"
 #include "base/CharString.h"
 #include "base/PlatformUtilities.h"
 #include "logging/EventLogger.h"
@@ -58,7 +57,7 @@ void initEventLogger(void) {
   eventLoggerInstance->logLevel = LOG_INFO;
   eventLoggerInstance->logFile = NULL;
   eventLoggerInstance->useColor = false;
-  eventLoggerInstance->zebraStripeSize = (long)DEFAULT_SAMPLE_RATE;
+  eventLoggerInstance->zebraStripeSize = 0;
   eventLoggerInstance->systemErrorMessage = NULL;
 
 #if WINDOWS

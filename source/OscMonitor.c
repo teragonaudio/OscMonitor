@@ -1,4 +1,4 @@
-#include "OscMonitor.h"
+// LibLo header
 #include "lo/lo.h"
 
 // MrsWatson SDK
