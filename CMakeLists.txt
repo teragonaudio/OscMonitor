@@ -25,4 +25,4 @@ add_executable(${PROJECT_NAME}
   ${mrswatson_SDK_SOURCES}
   ${mrswatson_SDK_HEADERS}
 )
-target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/lib/liblo.a m)
+target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/lib/liblo.a m pthread)
