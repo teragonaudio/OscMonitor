@@ -47,7 +47,9 @@ static CharString formatData(const char type, lo_arg *data) {
       charStringCopyCString(result, (char*)data);
       break;
     default:
-      ("Unknown type!");
+      sprintf(result->data, "Formatting for OSC '%c' data types", type);
+      logUnsupportedFeature(result->data);
+      charStringClear(result);
       break;
   }
 
