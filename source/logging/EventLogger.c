@@ -35,7 +35,6 @@
 #include "base/PlatformUtilities.h"
 #include "logging/EventLogger.h"
 #include "logging/LogPrinter.h"
-#include "time/AudioClock.h"
 
 #if WINDOWS
 #include <Windows.h>
@@ -194,20 +193,17 @@ static LogColor _logTimeZebraStripeColor(const long elapsedTime, const unsigned 
   return zebraState ? COLOR_FG_OLIVE : COLOR_FG_GREEN;
 }
 
-static void _printMessage(const LogLevel logLevel, const long elapsedTimeInMs, const long numFramesProcessed, const char* message, const EventLogger eventLogger) {
+static void _printMessage(const LogLevel logLevel, const long elapsedTimeInMs, const char* message, const EventLogger eventLogger) {
   char* logString = (char*)malloc(sizeof(char) * kCharStringLengthLong);
   if(eventLogger->useColor) {
     snprintf(logString, kCharStringLengthLong, "%c ", _logLevelStatusChar(logLevel));
     printToLog(_logLevelStatusColor(logLevel), eventLogger->logFile, logString);
-    snprintf(logString, kCharStringLengthLong, "%08ld ", numFramesProcessed);
-    printToLog(_logTimeZebraStripeColor(numFramesProcessed, eventLogger->zebraStripeSize),
-      eventLogger->logFile, logString);
     snprintf(logString, kCharStringLengthLong, "%06ld ", elapsedTimeInMs);
     printToLog(_logTimeColor(), eventLogger->logFile, logString);
     printToLog(_logLevelStatusColor(logLevel), eventLogger->logFile, message);
   }
   else {
-    snprintf(logString, kCharStringLengthLong, "%c %08ld %06ld %s", _logLevelStatusChar(logLevel), numFramesProcessed, elapsedTimeInMs, message);
+    snprintf(logString, kCharStringLengthLong, "%c %06ld %s", _logLevelStatusChar(logLevel), elapsedTimeInMs, message);
     printToLog(COLOR_NONE, eventLogger->logFile, logString);
   }
   flushLog(eventLogger->logFile);
@@ -234,7 +230,7 @@ static void _logMessage(const LogLevel logLevel, const char* message, va_list ar
     elapsedTimeInMs = ((currentTime.tv_sec - (eventLogger->startTimeInSec + 1)) * 1000) +
       (currentTime.tv_usec / 1000) + (1000 - eventLogger->startTimeInMs);
 #endif
-    _printMessage(logLevel, elapsedTimeInMs, getAudioClock()->currentFrame, formattedMessage->data, eventLogger);
+    _printMessage(logLevel, elapsedTimeInMs, formattedMessage->data, eventLogger);
     freeCharString(formattedMessage);
   }
 }
